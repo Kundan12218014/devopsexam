@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Clone') {
             steps {
-                echo 'Assuming repo is already cloned by Jenkins...'
+                git url: 'https://github.com/Kundan12218014/devopsexam', branch: 'main'
             }
         }
         stage('Build Docker Image') {
