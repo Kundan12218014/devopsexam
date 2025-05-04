@@ -4,7 +4,7 @@ pipeline {
   environment {
     IMAGE_NAME = "simple-html-app"
     CONTAINER_NAME = "html-container"
-    PORT = "8080"
+    PORT = "3000"
   }
 
   stages {
