@@ -1,28 +1,88 @@
+// pipeline {
+//     agent any
+
+//     stages {
+//         stage('Build Docker Image') {
+//             steps {
+//                 bat 'docker build -t my-app .'
+//             }
+//         }
+//         stage('Stop & Remove Old Container') {
+//             steps {
+//                 bat 'docker stop my-app || exit 0'
+//                 bat 'docker rm my-app || exit 0'
+//             }
+//         }
+//         stage('Run New Container') {
+//             steps {
+//                 bat 'docker run -d -p 80:80 --name my-app my-app'
+//             }
+//         }
+//     }
+
+//     post {
+//         failure {
+//             echo "❌ Deployment failed."
+//         }
+//     }
+// }
+
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = 'kundankumarbhagat/mywebapp'
+        DOCKER_CREDENTIALS = 'dockerhub-credentials'  // Credentials ID in Jenkins
+        REGISTRY = 'docker.io'
+    }
+
     stages {
+        stage('Checkout Code') {
+            steps {
+                git 'https://github.com/Kundan12218014/devopsexam.git'
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t my-app .'
+                script {
+                    docker.build(DOCKER_IMAGE)
+                }
             }
         }
-        stage('Stop & Remove Old Container') {
+
+        stage('Login to Docker Hub') {
             steps {
-                bat 'docker stop my-app || exit 0'
-                bat 'docker rm my-app || exit 0'
+                script {
+                    docker.withRegistry("https://${REGISTRY}", DOCKER_CREDENTIALS) {
+                        echo 'Logged in to Docker Hub'
+                    }
+                }
             }
         }
-        stage('Run New Container') {
+
+        stage('Push Docker Image') {
             steps {
-                bat 'docker run -d -p 80:80 --name my-app my-app'
+                script {
+                    docker.withRegistry("https://${REGISTRY}", DOCKER_CREDENTIALS) {
+                        docker.image(DOCKER_IMAGE).push('latest')
+                    }
+                }
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    docker.run(DOCKER_IMAGE)
+                }
             }
         }
     }
 
     post {
-        failure {
-            echo "❌ Deployment failed."
+        always {
+            cleanWs()
         }
     }
 }
