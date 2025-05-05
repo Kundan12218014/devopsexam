@@ -30,59 +30,45 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_IMAGE = 'kundankumarbhagat/mywebapp'
-        DOCKER_CREDENTIALS = 'dockerhub-credentials'  // Credentials ID in Jenkins
-        REGISTRY = 'docker.io'
-    }
-
     stages {
-        stage('Checkout Code') {
+        stage('Build Docker Image') {
             steps {
-                git branch: 'main', url: 'https://github.com/Kundan12218014/devopsexam'
+                bat 'docker build -t kundankumarbhagat/mywebapp .'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Stop & Remove Old Container') {
             steps {
-                script {
-                    docker.build(DOCKER_IMAGE)
-                }
+                bat 'docker stop mywebapp || exit 0'
+                bat 'docker rm mywebapp || exit 0'
             }
         }
 
         stage('Login to Docker Hub') {
             steps {
-                script {
-                    docker.withRegistry("https://${REGISTRY}", DOCKER_CREDENTIALS) {
-                        echo 'Logged in to Docker Hub'
-                    }
-                }
+                bat '''
+                    docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%
+                    echo "Logged in to Docker Hub"
+                '''
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                script {
-                    docker.withRegistry("https://${REGISTRY}", DOCKER_CREDENTIALS) {
-                        docker.image(DOCKER_IMAGE).push('latest')
-                    }
-                }
+                bat 'docker push kundankumarbhagat/mywebapp:latest'
             }
         }
 
-        stage('Run Docker Container') {
+        stage('Run New Container') {
             steps {
-                script {
-                    docker.run(DOCKER_IMAGE)
-                }
+                bat 'docker run -d -p 80:80 --name mywebapp kundankumarbhagat/mywebapp'
             }
         }
     }
 
     post {
-        always {
-            cleanWs()
+        failure {
+            echo "❌ Deployment failed."
         }
     }
 }
