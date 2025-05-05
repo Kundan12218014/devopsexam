@@ -39,7 +39,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/Kundan12218014/devopsexam.git'
+                git branch: 'main', url: 'https://github.com/Kundan12218014/devopsexam'
             }
         }
 
