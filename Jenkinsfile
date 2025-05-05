@@ -1,50 +1,28 @@
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    IMAGE_NAME = "simple-html-app"
-    CONTAINER_NAME = "html-container"
-    PORT = "3000"
-  }
-
-  stages {
-    stage('Checkout') {
-      steps {
-        git branch: 'main', url: 'https://github.com/Kundan12218014/devopsexam'
-      }
-    }
-
-    stage('Build Docker Image') {
-      steps {
-        script {
-          sh "docker build -t ${IMAGE_NAME} ."
+    stages {
+        stage('Build Docker Image') {
+            steps {
+                bat 'docker build -t my-app .'
+            }
         }
-      }
-    }
-
-    stage('Stop & Remove Old Container') {
-      steps {
-        script {
-          sh "docker rm -f ${CONTAINER_NAME} || true"
+        stage('Stop & Remove Old Container') {
+            steps {
+                bat 'docker stop my-app || exit 0'
+                bat 'docker rm my-app || exit 0'
+            }
         }
-      }
-    }
-
-    stage('Run New Container') {
-      steps {
-        script {
-          sh "docker run -d --name ${CONTAINER_NAME} -p ${PORT}:80 ${IMAGE_NAME}"
+        stage('Run New Container') {
+            steps {
+                bat 'docker run -d -p 80:80 --name my-app my-app'
+            }
         }
-      }
     }
-  }
 
-  post {
-    success {
-      echo "✅ Deployment completed successfully!"
+    post {
+        failure {
+            echo "❌ Deployment failed."
+        }
     }
-    failure {
-      echo "❌ Deployment failed."
-    }
-  }
 }
