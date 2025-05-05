@@ -45,13 +45,17 @@ pipeline {
         }
 
         stage('Login to Docker Hub') {
-            steps {
-                bat '''
-                    docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%
-                    echo "Logged in to Docker Hub"
-                '''
+    steps {
+        script {
+            // Use the stored credentials to log in to Docker Hub
+            withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASSWORD')]) {
+                // Execute Docker login using the credentials
+                bat "docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}"
             }
+            echo 'Logged in to Docker Hub'
         }
+    }
+}
 
         stage('Push Docker Image') {
             steps {
